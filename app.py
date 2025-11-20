@@ -1,40 +1,73 @@
-# app.py
-import streamlit as st
+import paho.mqtt.client as paho
 import time
+import streamlit as st
+import json
+import platform
 
-# Inicialización de Estados Simulados
-if 'sim_status' not in st.session_state:
-    st.session_state.sim_status = {
-        "luz_intensidad": 50,  # 0-100
-        "luz_color": "Blanco", # Blanco, Rojo, Azul
-        "timer_minutos": 0,    # 0-60
-        "alarma_estado": "Desarmada", # Armada, Desarmada, Activada
-        "sensibilidad": 5     # 1-10
-    }
+# Muestra la versión de Python junto con detalles adicionales
+st.write("Versión de Python:", platform.python_version())
 
-st.set_page_config(layout="wide", page_title="Estación de Trabajo Multimodal")
-st.title("💡 Estación de Trabajo y Alarma Multimodal")
+values = 0.0
+act1="OFF"
 
-# --- Barra Lateral de Estado y Enlace ---
-st.sidebar.title("Estado Simulado 🖥️")
-st.sidebar.markdown(
-    """
-    **Para la demostración, el estado en Wokwi
-    (el 'mundo físico') debe reflejar estos valores.**
-    """
-)
+def on_publish(client,userdata,result):             #create function for callback
+    print("el dato ha sido publicado \n")
+    pass
 
-st.sidebar.subheader("Ambiente de Trabajo")
-st.sidebar.text(f"Intensidad Luz: {st.session_state.sim_status['luz_intensidad']}%")
-st.sidebar.text(f"Color Luz: {st.session_state.sim_status['luz_color']}")
-st.sidebar.text(f"Timer: {st.session_state.sim_status['timer_minutos']} min")
+def on_message(client, userdata, message):
+    global message_received
+    time.sleep(2)
+    message_received=str(message.payload.decode("utf-8"))
+    st.write(message_received)
 
-st.sidebar.subheader("Ambiente de Seguridad")
-st.sidebar.text(f"Alarma: {st.session_state.sim_status['alarma_estado']}")
-st.sidebar.text(f"Sensibilidad: {st.session_state.sim_status['sensibilidad']}")
+        
 
-# ¡IMPORTANTE! Reemplaza este enlace por el de tu proyecto Wokwi
-WOKWI_URL = "https://wokwi.com/projects/YOUR_WOKWI_PROJECT_ID" 
-st.sidebar.link_button("Ver Simulación Wokwi", WOKWI_URL)
 
-st.info("Utiliza el menú de la izquierda para navegar entre las páginas (Control y Seguridad).")
+broker="157.230.214.127"
+port=1883
+client1= paho.Client("GIT-HUB")
+client1.on_message = on_message
+
+
+
+st.title("MQTT Control")
+
+if st.button('ON'):
+    act1="ON"
+    client1= paho.Client("GIT-HUB")                           
+    client1.on_publish = on_publish                          
+    client1.connect(broker,port)  
+    message =json.dumps({"Act1":act1})
+    ret= client1.publish("cmqtt_s", message)
+ 
+    #client1.subscribe("Sensores")
+    
+    
+else:
+    st.write('')
+
+if st.button('OFF'):
+    act1="OFF"
+    client1= paho.Client("GIT-HUB")                           
+    client1.on_publish = on_publish                          
+    client1.connect(broker,port)  
+    message =json.dumps({"Act1":act1})
+    ret= client1.publish("cmqtt_s", message)
+  
+    
+else:
+    st.write('')
+
+values = st.slider('Selecciona el rango de valores',0.0, 100.0)
+st.write('Values:', values)
+
+if st.button('Enviar valor analógico'):
+    client1= paho.Client("GIT-HUB")                           
+    client1.on_publish = on_publish                          
+    client1.connect(broker,port)   
+    message =json.dumps({"Analog": float(values)})
+    ret= client1.publish("cmqtt_a", message)
+    
+ 
+else:
+    st.write('')
