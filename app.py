@@ -76,7 +76,7 @@ def publish_mqtt(topic, payload):
 # --- 4. Interfaz de Usuario (UI) ---
 
 # Título y Header con diseño moderno y colores
-st.title("💡 Panel de Control MQTT Minimalista")
+st.title("💡 Panel de Control MQTT")
 st.markdown("---") # Separador minimalista
 
 # Contenedor para la conexión (puede ser opcionalmente una barra lateral)
